@@ -1,6 +1,7 @@
 import { KVStore } from "@keplr-wallet/common";
 import { DeepReadonly } from "utility-types";
 import { IPriceStore } from "../price";
+import { ObservableQueryIbcStatuses } from "./ibc-status";
 import { ObservableQueryPoolFeesMetrics } from "./pool-fees";
 import { ObservableQueryAccountsPoolRewards } from "./pool-rewards";
 
@@ -8,12 +9,14 @@ import { ObservableQueryAccountsPoolRewards } from "./pool-rewards";
 export class QueriesExternalStore {
   public readonly queryGammPoolFeeMetrics: DeepReadonly<ObservableQueryPoolFeesMetrics>;
   public readonly queryAccountsPoolRewards: DeepReadonly<ObservableQueryAccountsPoolRewards>;
+  public readonly queryIbcStatuses: DeepReadonly<ObservableQueryIbcStatuses>;
 
   constructor(
     kvStore: KVStore,
     priceStore: IPriceStore,
     feeMetricsBaseURL = "https://api-osmosis.imperator.co",
-    poolRewardsBaseUrl = "https://api-osmosis-chain.imperator.co"
+    poolRewardsBaseUrl = "https://api-osmosis-chain.imperator.co",
+    ibcStatusBaseUrl = "https://api-osmosis-chain.imperator.co"
   ) {
     this.queryGammPoolFeeMetrics = new ObservableQueryPoolFeesMetrics(
       kvStore,
@@ -23,6 +26,10 @@ export class QueriesExternalStore {
       kvStore,
       priceStore,
       poolRewardsBaseUrl
+    );
+    this.queryIbcStatuses = new ObservableQueryIbcStatuses(
+      kvStore,
+      ibcStatusBaseUrl
     );
   }
 }
