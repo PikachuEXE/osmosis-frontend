@@ -2,10 +2,48 @@ import { KVStore } from "@keplr-wallet/common";
 import { HasMapStore } from "@keplr-wallet/stores";
 import { makeObservable } from "mobx";
 import { computedFn } from "mobx-utils";
+import { DeepReadonly } from "utility-types";
 import { ObservableQueryExternalBase } from "../base";
 import { IbcMetrics, IbcStatus } from "./types";
 
-export class ObservableQueryIbcDepositStatus extends ObservableQueryExternalBase<IbcMetrics> {
+export class ObservableQueryIbcStatuses {
+  protected readonly queryIbcDepositStatuses: DeepReadonly<ObservableQueryIbcDepositStatuses>;
+  protected readonly queryIbcWithdrawStatuses: DeepReadonly<ObservableQueryIbcWithdrawStatuses>;
+
+  constructor(
+    kvStore: KVStore,
+    ibcStatusBaseUrl = "https://api-osmosis-chain.imperator.co"
+  ) {
+    this.queryIbcDepositStatuses = new ObservableQueryIbcDepositStatuses(
+      kvStore,
+      ibcStatusBaseUrl
+    );
+    this.queryIbcWithdrawStatuses = new ObservableQueryIbcWithdrawStatuses(
+      kvStore,
+      ibcStatusBaseUrl
+    );
+  }
+
+  readonly getIbcStatus = computedFn(
+    (
+      direction: "deposit" | "withdraw",
+      counterpartyChainId: string,
+      sourceChannelId: string
+    ) => {
+      if (direction === "deposit") {
+        return this.queryIbcDepositStatuses
+          .get(counterpartyChainId)
+          .getIbcStatus(sourceChannelId);
+      } else if (direction === "withdraw") {
+        return this.queryIbcWithdrawStatuses
+          .get(counterpartyChainId)
+          .getIbcStatus(sourceChannelId);
+      }
+    }
+  );
+}
+
+class ObservableQueryIbcDepositStatus extends ObservableQueryExternalBase<IbcMetrics> {
   constructor(kvStore: KVStore, baseURL: string, counterPartyChainID: string) {
     // If we are depositing, destination is osmosis
     super(
@@ -17,12 +55,12 @@ export class ObservableQueryIbcDepositStatus extends ObservableQueryExternalBase
   }
 
   readonly getIbcStatus = computedFn(
-    (counterPartyChainID: string): IbcStatus => {
+    (sourceChannelId: string): IbcStatus | undefined => {
       const ibcRaw = this.response?.data.data.find(
-        (statusMetric) => statusMetric.channel_id === counterPartyChainID
+        (statusMetric) => statusMetric.channel_id === sourceChannelId
       );
       if (!ibcRaw) {
-        return IbcStatus.Blocked;
+        return;
       }
 
       // TODO: figure out what metrics constitute congested or not
@@ -35,7 +73,7 @@ export class ObservableQueryIbcDepositStatus extends ObservableQueryExternalBase
   );
 }
 
-export class ObservableQueryIbcDepositStatuses extends HasMapStore<ObservableQueryIbcDepositStatus> {
+class ObservableQueryIbcDepositStatuses extends HasMapStore<ObservableQueryIbcDepositStatus> {
   constructor(
     kvStore: KVStore,
     ibcStatusBaseUrl = "https://api-osmosis-chain.imperator.co"
@@ -55,7 +93,7 @@ export class ObservableQueryIbcDepositStatuses extends HasMapStore<ObservableQue
   }
 }
 
-export class ObservableQueryIbcWithdrawStatus extends ObservableQueryExternalBase<IbcMetrics> {
+class ObservableQueryIbcWithdrawStatus extends ObservableQueryExternalBase<IbcMetrics> {
   constructor(kvStore: KVStore, baseURL: string, counterPartyChainID: string) {
     // If we are withdrawing, destination is counterPartyChainID
     super(
@@ -67,12 +105,12 @@ export class ObservableQueryIbcWithdrawStatus extends ObservableQueryExternalBas
   }
 
   readonly getIbcStatus = computedFn(
-    (counterPartyChainID: string): IbcStatus => {
+    (counterPartyChainID: string): IbcStatus | undefined => {
       const ibcRaw = this.response?.data.data.find(
         (statusMetric) => statusMetric.channel_id === counterPartyChainID
       );
       if (!ibcRaw) {
-        return IbcStatus.Blocked;
+        return;
       }
 
       // TODO: figure out what metrics constitute congested or not
@@ -85,7 +123,7 @@ export class ObservableQueryIbcWithdrawStatus extends ObservableQueryExternalBas
   );
 }
 
-export class ObservableQueryIbcWithdrawStatuses extends HasMapStore<ObservableQueryIbcWithdrawStatus> {
+class ObservableQueryIbcWithdrawStatuses extends HasMapStore<ObservableQueryIbcWithdrawStatus> {
   constructor(
     kvStore: KVStore,
     ibcStatusBaseUrl = "https://api-osmosis-chain.imperator.co"
