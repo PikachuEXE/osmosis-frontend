@@ -142,3 +142,5 @@ class ObservableQueryIbcWithdrawStatuses extends HasMapStore<ObservableQueryIbcW
     return super.get(counterPartyChainID) as ObservableQueryIbcWithdrawStatus;
   }
 }
+
+export * from "./types";

@@ -1,5 +1,6 @@
 import { FunctionComponent, useState } from "react";
 import { observer } from "mobx-react-lite";
+import { IbcStatus } from "@osmosis-labs/stores";
 import { useStore } from "../stores";
 import { Transfer } from "../components/complex/transfer";
 import {
@@ -14,7 +15,8 @@ import { useTranslation } from "react-multi-lang";
 
 export const IbcTransferModal: FunctionComponent<ModalBaseProps & IbcTransfer> =
   observer((props) => {
-    const { currency, counterpartyChainId, isWithdraw } = props;
+    const { currency, counterpartyChainId, sourceChannelId, isWithdraw } =
+      props;
     const t = useTranslation();
     const {
       chainStore,
@@ -41,6 +43,12 @@ export const IbcTransferModal: FunctionComponent<ModalBaseProps & IbcTransfer> =
       !customCounterpartyConfig ||
       customCounterpartyConfig?.bech32Address === "" || // if not changed, it's valid since it's from Keplr
       (customCounterpartyConfig.isValid && didAckWithdrawRisk);
+
+    const ibcStatus = queriesExternalStore.queryIbcDepositStatuses.getIbcStatus(
+      isWithdraw ? "withdraw" : "deposit",
+      counterpartyChainId,
+      sourceChannelId
+    );
 
     const { showModalBase, accountActionButton, walletConnected } =
       useConnectWalletModalRedirect(
@@ -144,14 +152,12 @@ export const IbcTransferModal: FunctionComponent<ModalBaseProps & IbcTransfer> =
                   },
                 ]
           }
-          ibcStatus={
-            isWithdraw
-              ? queriesExternalStore.queryIbcWithdrawStatuses
-                  .get(counterpartyChainId)
-                  .getIbcStatus(counterpartyChainId)
-              : queriesExternalStore.queryIbcDepositStatuses
-                  .get(counterpartyChainId)
-                  .getIbcStatus(counterpartyChainId)
+          transferStatus={
+            ibcStatus === IbcStatus.Blocked
+              ? "blocked"
+              : ibcStatus === IbcStatus.Congested
+              ? "congested"
+              : undefined
           }
           isOsmosisAccountLoaded={walletConnected}
           availableBalance={
