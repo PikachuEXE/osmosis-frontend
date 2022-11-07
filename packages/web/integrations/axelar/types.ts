@@ -16,52 +16,74 @@ export interface AxelarBridgeConfig {
    */
 }
 
-/** See: https://docs.axelar.dev/dev/build/chain-names/mainnet
- *  See: https://docs.axelar.dev/dev/build/chain-names/testnet
- *  Testnet: https://axelartest-lcd.quickapi.com/axelar/nexus/v1beta1/chains?status=1
- */
+/** Intermediate source chain identifiers */
 export type SourceChain =
   | "aurora"
-  | "Avalanche"
+  | "avalanche"
   | "binance"
-  | "Ethereum"
-  | "ethereum-2"
-  | "Fantom"
-  | "Moonbeam"
-  | "Polygon";
+  | "ethereum"
+  | "fantom"
+  | "moonbeam"
+  | "polygon";
 
-/** Maps eth client chainIDs => axelar chain ids.
+/** Maps Axelar chain id agruments => source chain ids. 
+ *  SourceChain (IDs) are used in ./source-chain-configs.ts::SourceChainConfigs{} as <asset>::<network>::id values.
+ *  Axelar Chain IDs are accepted as arguments in Axelar's APIs.
+ *  Mainnet Docs: https://docs.axelar.dev/dev/build/chain-names/mainnet
+ *  Testnet Docs: https://docs.axelar.dev/dev/build/chain-names/testnet
+ *  Testnet API: https://axelartest-lcd.quickapi.com/axelar/nexus/v1beta1/chains?status=1
+ */
+export const AxelarChainIds_SourceChainMap: {
+  [axelarChainIds: string]: SourceChain;
+} = IS_TESTNET ?
+  {
+    "aurora": "aurora",
+    "Avalanche": "avalanche",
+    "binance": "binance",
+    "ethereum-2": "ethereum",
+    "Fantom": "fantom",
+    "Moonbeam": "moonbeam",
+    "Polygon": "polygon"
+  } :
+  {
+    "Avalanche": "avalanche",
+    "binance": "binance",
+    "Ethereum": "ethereum",
+    "Fantom": "fantom",
+    "Moonbeam": "moonbeam",
+    "Polygon": "polygon"
+  };
+
+/** Maps eth client chain IDs => source chain ids.
  *
  *  ethClientChainIDs must be specified in ../ethereuem/types.ts::ChainNames{} to map the name to a chainID, which is in turn used to add the network to EVM-compatible wallets, like Metamask.
- *
- * AxelarChainIds must be specified in SourceChain{} and are used in ./source-chain-configs.ts::SourceChainConfigs{} as <asset>::<network>::id values.
- *
- *  Values not included as keys are assumed to be the same across chainlist and Axelar.
+ *  SourceChain (IDs) are used in ./source-chain-configs.ts::SourceChainConfigs{} as <asset>::<network>::id values.
  */
-export const EthClientChainIds_AxelarChainIdsMap: {
+export const EthClientChainIds_SourceChainMap: {
   [ethClientChainIds: string]: SourceChain;
 } = IS_TESTNET ?
   {
     "Aurora Testnet": "aurora",
-    "Avalanche Fuji Testnet": "Avalanche",
+    "Avalanche Fuji Testnet": "avalanche",
     "Binance Smart Chain Testnet": "binance",
-    "Goerli Test Network": "ethereum-2",
-    "Fantom Testnet": "Fantom",
-    "Moonbase Alpha": "Moonbeam",
-    "Mumbai": "Polygon",
+    "Goerli Test Network": "ethereum",
+    "Fantom Testnet": "fantom",
+    "Moonbase Alpha": "moonbeam",
+    "Mumbai": "polygon",
   } : {
-    "Avalanche C-Chain": "Avalanche",
+    "Avalanche C-Chain": "avalanche",
     "Binance Smart Chain Mainnet": "binance",
-    "Ethereum Main Network": "Ethereum",
-    "Fantom Opera": "Fantom",
-    "Moonbeam Mainnet": "Moonbeam",
-    "Polygon Mainnet": "Polygon",
+    "Ethereum Main Network": "ethereum",
+    "Fantom Opera": "fantom",
+    "Moonbeam Mainnet": "moonbeam",
+    "Polygon Mainnet": "polygon",
   };
 
 export type SourceChainConfig = {
-  /** Axelar-defined identifier. */
+  /** Source Chain identifier. */
   id: SourceChain;
-  /** Address of origin ERC20 token for that origin chain. Leave blank to prefer native ETH currency if `id` is not a Cosmos chain in `ChainInfo`.
+  /** Address of origin ERC20 token for that origin chain.
+   * Leave blank to prefer native ETH currency if `id` is not a Cosmos chain in `ChainInfo`.
    */
   erc20ContractAddress?: string;
 
@@ -80,5 +102,7 @@ export type SourceChainConfig = {
   *  See calculator tool on Axelar docs to get current fee constants: https://docs.axelar.dev/resources/mainnet#cross-chain-relayer-gas-fee.
   */
   transferFeeMinAmount: string;
-  
+
+  prettyName: string;
+
 };

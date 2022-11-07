@@ -39,7 +39,8 @@ export const IBCAssetInfos: (IBCAsset & {
       method: "deposit-address" as const,
       sourceChains: [
         AxelarSourceChainConfigs.usdc.ethereum,
-        AxelarSourceChainConfigs.usdc.moonbeam
+        AxelarSourceChainConfigs.usdc.moonbeam,
+        AxelarSourceChainConfigs.usdc.binance
       ],
     },
   },

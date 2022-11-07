@@ -189,8 +189,8 @@ export const TransferAssetSelectModal: FunctionComponent<
 });
 
 const Network: FunctionComponent<
-  { id: string; logoUrl: string } & CustomClasses
-> = ({ id: displayName, logoUrl, className }) => (
+  { prettyName: string; logoUrl: string } & CustomClasses
+> = ({ prettyName: displayName, logoUrl, className }) => (
   <div className={classNames("flex items-center gap-2 select-none", className)}>
     <Image alt="network logo" src={logoUrl} height={28} width={28} />
     <span className="subtitle2">{displayName}</span>
